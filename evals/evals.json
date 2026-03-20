@@ -1,0 +1,23 @@
+{
+  "skill_name": "swarm",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/swarm review backend/api.py 的安全性",
+      "expected_output": "Uses default backend (droid) and default model (gpt-5.4). Dispatches in background, waits for completion, selectively verifies 2-3 key security claims using Read/Grep, presents report with verified/unverified/incorrect tags",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/swarm 用 droid 和 codex 同时 review backend/api.py 的 CORS 配置",
+      "expected_output": "Dispatches both droid and codex in parallel as background tasks, collects both outputs, cross-compares findings into consensus/unique/contradictions format",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "/swarm 用 droid(claude-sonnet-4-6) 在 worktree 里给 backend/api.py 的 health check endpoints 加上 response_model",
+      "expected_output": "Dispatches droid with -w flag and claude-sonnet-4-6 model, waits for completion, verifies that response_model was added to health check endpoints",
+      "files": []
+    }
+  ]
+}
