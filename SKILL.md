@@ -44,7 +44,7 @@ default_model: gpt-5.4      # default model
 backends:
   droid:
     command: droid exec     # base command
-    models: [gpt-5.4, gemini-3.1-pro-preview, claude-sonnet-4-6]
+    models: [gpt-5.4, gemini-3.1-pro-preview, claude-opus-4-6]
     flags:
       model: "-m {model}"
       worktree: "-w"
@@ -52,7 +52,7 @@ backends:
       session: "-s {session_id}"
   codex:
     command: codex exec
-    models: [gpt-5.3-codex]
+    models: [gpt-5.4]
     flags:
       model: "-m {model}"
       session: "-s {session_id}"
@@ -78,7 +78,7 @@ Extract from the user's prompt:
 1. **Task description** — what the worker should do
 2. **Backend + model** — which agent and model to use. Scan for:
    - Explicit backend: "用 droid", "let codex", "have claude"
-   - Explicit model: "gpt-5.4", "sonnet", "gemini-3.1-pro"
+   - Explicit model: "gpt-5.4", "opus", "gemini-3.1-pro"
    - Alias: "quick", "deep"
    - If nothing specified, use `default` backend + `default_model` from config (so `/swarm review X` just works)
 3. **Multi-agent?** — look for "和...同时", "and...together", multiple agent names, "consensus", "compare"
@@ -243,7 +243,7 @@ Present the final report to the user:
 
 ### Unique Findings
 - [droid/gpt-5.4]: <finding only this agent caught>
-- [codex/gpt-5.3]: <finding only this agent caught>
+- [codex/gpt-5.4]: <finding only this agent caught>
 
 ### Contradictions
 - <topic>: Agent A says X, Agent B says Y
