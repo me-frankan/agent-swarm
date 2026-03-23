@@ -110,8 +110,8 @@ Do NOT include:
 ### Autonomy Level (Droid only)
 
 Infer the `--auto` level from the task type — the user shouldn't have to think about this:
-- **Review / audit / analysis** → omit `--auto` (read-only, the default)
-- **Implementation / refactor / fix** → `--auto low` (file creation/modification)
+- **Review / audit / analysis** → `--auto medium` (Droid's default read-only mode only allows cat/less/head; grep/find/rg need medium)
+- **Implementation / refactor / fix** → `--auto medium` (file creation/modification + search tools)
 - **Install deps / run tests / build** → `--auto medium` (package installs, git local ops)
 - **Git push / deploy** → `--auto high` (only if user explicitly asks)
 
