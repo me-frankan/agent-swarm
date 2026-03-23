@@ -102,6 +102,7 @@ Write a focused prompt for the worker. Include:
 - Target files or directories
 - What output format you want (findings list, code changes, etc.)
 - Constraint: "Write your complete output — findings, reasoning, and any code changes."
+- **For review/analysis tasks:** ALWAYS append "Do NOT modify any files — report findings only." Even with `--auto medium`, workers will modify files unless explicitly told not to.
 
 Do NOT include:
 - Tool usage instructions (the worker knows its own tools)
