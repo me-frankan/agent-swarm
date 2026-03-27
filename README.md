@@ -22,10 +22,12 @@ Swarm turns Claude Code into a dispatcher that fans out work to external AI codi
 
 - **Single-agent mode** — dispatch to one agent, selectively fact-check its key claims
 - **Multi-agent mode** — dispatch the same task to multiple agents in parallel, cross-compare their outputs (consensus vs unique findings vs contradictions)
+- **Debate mode** — adversarial design review where you and an external agent argue back and forth until convergence
 
 ```
 Single agent:   Dispatch → Execute → Verify → Report
 Multi agent:    Dispatch ×N → Execute (parallel) → Cross-Compare → Report
+Debate:         Position → Challenge → Rebut → ... → Converge → Report
 ```
 
 ## Usage
@@ -39,6 +41,10 @@ Multi agent:    Dispatch ×N → Execute (parallel) → Cross-Compare → Report
 
 # Multi-agent consensus
 /swarm use droid and codex to review the CORS config
+
+# Debate mode — adversarial design review
+/swarm debate with codex about whether to use Redis or DB for heartbeat
+/swarm 和 droid 辩论这个方案的可行性
 
 # With worktree isolation
 /swarm use sonnet to refactor error handling in a worktree
@@ -85,6 +91,16 @@ Automatically inferred from task type (Droid only):
 - Implementation/refactor → `--auto low`
 - Build/test → `--auto medium`
 - Deploy/push → `--auto high` (only if explicitly requested)
+
+### Debate Mode
+
+Stress-test a design decision through adversarial back-and-forth. You take a position, the external agent attacks it. Each round appends to a shared transcript file so the opponent always has full context (external agents have no memory between calls).
+
+Key rules:
+- **Full transcript every round** — the transcript file IS the opponent's memory
+- **Verify code claims** — if either side cites file:line, check it before accepting
+- **Concede when wrong** — the goal is a better design, not winning
+- Stops on convergence, irreducible disagreement, or 5 rounds max
 
 ### Session Continuation
 

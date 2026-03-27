@@ -250,6 +250,113 @@ Present the final report to the user:
 - <topic>: Agent A says X, Agent B says Y
 ```
 
+## Debate Mode
+
+Adversarial design review between you (Claude Code) and an external agent. Use when the user wants to stress-test a design decision, not just get a second opinion.
+
+**Trigger words:** "debate with", "argue with", "辩论", "反驳", "让 X 反驳", "和 X 讨论方案"
+
+**Announce at start:** "Using swarm debate mode — I'll take position A, [agent] will challenge it."
+
+### Why Debate, Not Just Review
+
+A review asks "is this good?" A debate asks "where does this break?" The external agent is adversarial — its job is to find holes in your reasoning, not validate it. You then rebut, and the debate continues until convergence or the user intervenes.
+
+### Execution Flow
+
+```
+Debate:  Take position → Write transcript → Dispatch opponent → Read response →
+         Rebut (append to transcript) → Dispatch again → ... → Converge → Report
+```
+
+### Step 1: Setup
+
+Create a shared transcript file. This is the **single source of truth** — both sides read the full history.
+
+```bash
+mkdir -p ~/.swarm/tasks/<debate-id>/output
+```
+
+Write the initial transcript to `~/.swarm/tasks/<debate-id>/debate.md`:
+
+```markdown
+# <Topic> — Design Debate
+
+Context: <brief problem description>
+
+---
+
+## Round 1: <Your Name>'s Position
+
+<your argument>
+
+---
+
+## Your Task
+
+You are <opponent>. Read the FULL debate above. Attack the position — find holes, not just disagree.
+<specific questions to answer>
+
+Do NOT modify any files — analysis only.
+```
+
+### Step 2: Dispatch Rounds
+
+Each round:
+
+1. **Append your rebuttal** to the transcript (new `## Round N` section)
+2. **Update the "Your Task" section** at the bottom with new questions
+3. **Dispatch the full file** as the prompt:
+   ```bash
+   <backend-command> "$(cat ~/.swarm/tasks/<debate-id>/debate.md)" \
+     > ~/.swarm/tasks/<debate-id>/output/round-N.md 2>&1
+   ```
+4. **Read the response**, extract the opponent's arguments
+5. **Append the opponent's response** as a new round in the transcript
+6. **Evaluate**: converged? New holes found? User should weigh in?
+
+### Step 3: Convergence
+
+Stop when:
+- **Agreement reached** — both sides converge on the same recommendation
+- **Irreducible disagreement** — positions are clear, tradeoffs understood, user must decide
+- **Max rounds** (5) — surface to user with summary of positions
+- **User intervenes** — user picks a direction
+
+### Step 4: Report
+
+```
+## Swarm Debate Report: <topic>
+**Agents:** You (Claude) vs <opponent> (<model>) | **Rounds:** N
+
+### Consensus
+<points both sides agree on>
+
+### Your Position (final)
+<your refined argument after N rounds>
+
+### Opponent's Position (final)
+<their refined argument>
+
+### Key Concessions
+- You conceded: <what>
+- Opponent conceded: <what>
+
+### Unresolved
+<remaining disagreements — user must decide>
+
+### Recommendation
+<your final recommendation incorporating debate findings>
+```
+
+### Critical Rules
+
+- **Full transcript every round.** The opponent has no memory between dispatches. The transcript file IS the memory. Every dispatch sends the complete file.
+- **Append, don't overwrite.** Each round adds to the transcript. Never delete prior rounds.
+- **Steel-man the opponent.** When rebutting, acknowledge valid points before countering. Don't strawman.
+- **Verify claims.** If either side cites specific code (file:line), verify it with Read/Grep before accepting. Code-grounded claims beat theoretical arguments.
+- **Concede when wrong.** If the opponent finds a real hole, say so. Update your position. The goal is a better design, not winning.
+
 ## Reference Files
 
 - `references/config-example.yaml` — Default config template with all built-in backends
@@ -261,4 +368,5 @@ When `/swarm` is invoked:
 
 - **No arguments**: Explain what swarm does and show usage examples
 - **Config request** ("configure", "setup", "add backend"): Follow `references/first-run-setup.md`
-- **Task request**: Execute the full dispatch flow above
+- **Debate request** ("debate", "argue", "辩论", "反驳"): Execute debate mode flow
+- **Task request**: Execute the single/multi-agent dispatch flow above
