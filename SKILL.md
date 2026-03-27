@@ -349,6 +349,18 @@ Stop when:
 <your final recommendation incorporating debate findings>
 ```
 
+### Step 5: Save Transcript to Project
+
+After presenting the report, save the debate transcript to the project so it's version-controlled and visible to the team:
+
+```bash
+cp ~/.swarm/tasks/<debate-id>/debate.md docs/specs/<YYYY-MM-DD>-<topic>-debate.md
+```
+
+Use the same date prefix as the related spec/plan. If the user has a different docs convention, follow that instead.
+
+Tell the user: "Debate transcript saved to `docs/specs/<filename>`. You can commit it with the spec."
+
 ### Critical Rules
 
 - **Full transcript every round.** The opponent has no memory between dispatches. The transcript file IS the memory. Every dispatch sends the complete file.
