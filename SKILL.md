@@ -141,10 +141,10 @@ Use a short descriptive ID like `review-api-auth` or `refactor-errors`.
 
 ### Spawn Workers
 
-Use Bash with `run_in_background: true`. For each worker:
+Use Bash with `run_in_background: true`. Do NOT add shell redirects (`> file 2>&1`) — the `run_in_background` mechanism automatically captures stdout/stderr to its output file. Adding a redirect steals the output, leaving the background task's output file empty.
 
 ```bash
-<full-command> > ~/.swarm/tasks/<task-id>/output/<backend>.md 2>&1
+<full-command>
 ```
 
 For multi-agent mode, spawn ALL workers in a single message (parallel tool calls).
@@ -160,11 +160,7 @@ Then **return control** — don't block waiting. The user can keep working.
 
 ## Step 4: Collect Results
 
-When a background task completes (you receive a notification), read the output:
-
-```bash
-cat ~/.swarm/tasks/<task-id>/output/<backend>.md
-```
+When a background task completes (you receive a notification), read the output from the background task's output file path (provided in the notification).
 
 ### Session Continuation (if worker needs more info)
 
