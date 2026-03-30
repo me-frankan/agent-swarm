@@ -1,6 +1,6 @@
 # agent-swarm
 
-Orchestrate external AI coding agents (Droid, Codex, Claude, etc.) as background workers from Claude Code — with selective verification and multi-agent consensus.
+Orchestrate external AI coding agents (Droid, Codex, Claude, Amp review, etc.) as background workers from Claude Code — with selective verification and multi-agent consensus.
 
 > One agent is one perspective. Swarm gives you a team.
 
@@ -36,6 +36,10 @@ Debate:         Position → Challenge → Rebut → ... → Converge → Report
 # Default (droid + gpt-5.4)
 /swarm review backend/api.py for security issues
 
+# Route review through Amp's native review CLI
+/swarm use amp to review main...HEAD
+/swarm use amp to review backend/api.py for security issues
+
 # Specify agent and model
 /swarm use droid(gemini-3.1-pro) to review the auth module
 
@@ -63,8 +67,11 @@ Built-in backends:
 | **Droid** | `droid exec` | gpt-5.4, gemini-3.1-pro, claude-sonnet-4-6, glm-5, kimi-k2.5, ... |
 | **Codex** | `codex exec` | gpt-5.3-codex, gpt-5.2 |
 | **Claude** | `claude -p` | opus, sonnet, haiku |
+| **Amp** | `amp review` | default (`amp` chooses the review agent) |
 
 Add any CLI agent by editing `~/.swarm/config.yaml`.
+
+Amp is intentionally treated as a review-only backend. Use it for code review tasks, not implementation/refactor work.
 
 ## How It Works
 
@@ -137,6 +144,16 @@ backends:
     flags:
       worktree: "-w"
 
+  amp:
+    command: amp review
+    models: [default]
+    task_types: [review]
+    flags:
+      files: "--files {files}"
+      instructions: "--instructions {instructions}"
+      checks_only: "--checks-only"
+      summary_only: "--summary-only"
+
 aliases:
   quick: { backend: droid, model: gemini-3-flash-preview }
   deep:  { backend: droid, model: gpt-5.4 }
@@ -152,10 +169,19 @@ Re-detect CLIs anytime:
 /swarm setup
 ```
 
+## Amp Review Backend
+
+When the selected backend is `amp`, Swarm dispatches through `amp review` instead of the normal prompt-style worker flow.
+
+- Commit ranges stay positional: `/swarm use amp to review main...HEAD`
+- File focus maps to `--files`: `/swarm use amp to review backend/api.py for security issues`
+- Extra focus maps to `--instructions`: security, performance, error handling, etc.
+- If no diff description is given, `amp review` defaults to uncommitted changes
+
 ## Requirements
 
 - **Claude Code** as the dispatcher (uses `run_in_background`, `Read`, `Grep`)
-- At least one external agent CLI installed (`droid`, `codex`, or `claude`)
+- At least one external agent CLI installed (`droid`, `codex`, `claude`, or `amp` for review-only use)
 
 ## License
 

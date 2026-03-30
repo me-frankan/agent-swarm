@@ -18,6 +18,12 @@
       "prompt": "/swarm 用 droid(claude-sonnet-4-6) 在 worktree 里给 backend/api.py 的 health check endpoints 加上 response_model",
       "expected_output": "Dispatches droid with -w flag and claude-sonnet-4-6 model, waits for completion, verifies that response_model was added to health check endpoints",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "/swarm use amp to review main...HEAD and focus on security issues in backend/api.py",
+      "expected_output": "Selects the amp backend in review-only mode, maps main...HEAD to the positional diff_description, passes backend/api.py via --files, passes the security focus via --instructions, and does not construct a generic free-form worker prompt",
+      "files": []
     }
   ]
 }

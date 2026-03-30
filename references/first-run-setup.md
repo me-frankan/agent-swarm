@@ -18,9 +18,10 @@ which gemini 2>/dev/null && gemini --version 2>&1
 
 1. Read `references/config-example.yaml` as the template
 2. For each detected CLI, keep its backend entry. Remove entries for CLIs not found.
-3. Set `default` to the first available backend in priority order: droid > codex > claude
-4. Write the result to `~/.swarm/config.yaml`
-5. Create `~/.swarm/tasks/` directory
+3. Set `default` to the first available backend in priority order: droid > codex > claude > amp
+4. If `default` ends up as `amp`, note that the default backend is review-only and non-review tasks must explicitly use another backend.
+5. Write the result to `~/.swarm/config.yaml`
+6. Create `~/.swarm/tasks/` directory
 
 ## Auth Verification
 
@@ -29,12 +30,14 @@ For each detected backend, run a quick smoke test to verify authentication:
 ```bash
 droid exec -m gpt-5.4 "respond with only: ok" 2>&1
 codex exec -m gpt-5.3-codex "respond with only: ok" 2>&1
+amp usage 2>&1
 ```
 
 If auth fails, note it in the output:
 - Codex: "Run `codex login` to authenticate"
 - Droid: "Set FACTORY_API_KEY or run `droid login`"
 - Claude: "Should work if Claude Code is running (you're already in it)"
+- Amp: "Run `amp login` to authenticate"
 
 ## Report
 

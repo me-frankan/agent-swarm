@@ -1,6 +1,6 @@
 ---
 name: swarm
-description: Orchestrate external AI coding agents (Droid, Codex, Claude, etc.) as background workers from Claude Code. Use this skill whenever the user wants to dispatch tasks to other AI agents, run multi-agent reviews, get consensus from multiple models, or delegate work to external coding CLIs. Triggers on phrases like "/swarm", "let droid do X", "have codex review", "send to gpt-5.4", "multi-agent review", "dispatch to", "use X agent to", or any mention of running tasks on external AI coding agents in parallel.
+description: Orchestrate external AI coding agents (Droid, Codex, Claude, Amp review, etc.) as background workers from Claude Code. Use this skill whenever the user wants to dispatch tasks to other AI agents, run multi-agent reviews, get consensus from multiple models, or delegate work to external coding CLIs. Triggers on phrases like "/swarm", "let droid do X", "have codex review", "use amp to review", "send to gpt-5.4", "multi-agent review", "dispatch to", "use X agent to", or any mention of running tasks on external AI coding agents in parallel.
 ---
 
 # Swarm
@@ -11,7 +11,7 @@ Orchestrate external AI coding agents as background workers. You are the dispatc
 
 ## Why This Exists
 
-A single agent gives one perspective. Different models catch different issues. Swarm lets you fan out work to external agents (Droid, Codex, Claude CLI, or any compatible CLI), then verify or cross-compare the results — without leaving your Claude Code session.
+A single agent gives one perspective. Different models catch different issues. Swarm lets you fan out work to external agents (Droid, Codex, Claude CLI, Amp review, or any compatible CLI), then verify or cross-compare the results — without leaving your Claude Code session.
 
 ## Core Concepts
 
@@ -64,6 +64,16 @@ backends:
     flags:
       worktree: "-w"
 
+  amp:
+    command: amp review
+    models: [default]
+    task_types: [review]
+    flags:
+      files: "--files {files}"
+      instructions: "--instructions {instructions}"
+      checks_only: "--checks-only"
+      summary_only: "--summary-only"
+
 aliases:
   quick: { backend: droid, model: gemini-3-flash-preview }
   deep:  { backend: droid, model: gpt-5.4 }
@@ -71,13 +81,15 @@ aliases:
 
 Users can add any CLI agent by adding a new backend entry.
 
+`amp` is a review-only backend. Do not dispatch implementation, refactor, or file-modifying tasks to it.
+
 ## Step 1: Parse the User's Request
 
 Extract from the user's prompt:
 
 1. **Task description** — what the worker should do
 2. **Backend + model** — which agent and model to use. Scan for:
-   - Explicit backend: "用 droid", "let codex", "have claude"
+   - Explicit backend: "用 droid", "let codex", "have claude", "use amp to review"
    - Explicit model: "gpt-5.4", "opus", "gemini-3.1-pro"
    - Alias: "quick", "deep"
    - If nothing specified, use `default` backend + `default_model` from config (so `/swarm review X` just works)
@@ -91,9 +103,19 @@ For each worker, construct the full command:
 
 ### Command Template
 
+For standard prompt-driven backends:
+
 ```
 {backend.command} {backend.flags.model} "{prompt}"
 ```
+
+For Amp review:
+
+```
+amp review [diff_description] [--files <paths...>] [--instructions <text>] [--checks-only] [--summary-only]
+```
+
+If the selected backend has `task_types: [review]`, only dispatch review/audit/analysis tasks to it. If the user explicitly chooses `amp` for non-review work, stop and tell them the Amp backend only supports code review.
 
 ### Prompt Construction
 
@@ -107,6 +129,16 @@ Write a focused prompt for the worker. Include:
 Do NOT include:
 - Tool usage instructions (the worker knows its own tools)
 - Implementation details about how to explore the codebase
+
+### Amp Review Mapping
+
+When the backend is `amp`, do not build a free-form worker prompt. Map the user's review request onto `amp review` arguments instead:
+
+- **Diff description**: Use commit ranges, git-ish refs, or natural-language review scopes as the positional argument. Examples: `HEAD~1`, `main...HEAD`, `uncommitted changes in backend/`.
+- **Files**: If the user names specific files or directories to focus on, pass them via `--files`.
+- **Instructions**: If the user specifies extra focus like security, performance, naming, or error handling, pass that via `--instructions`.
+- **No diff description**: Omit the positional argument so `amp review` uses uncommitted changes.
+- **Read-only behavior**: Do not append "Do NOT modify any files". `amp review` is already a review command.
 
 ### Autonomy Level (Droid only)
 
@@ -127,6 +159,7 @@ If the user requested worktree isolation:
   git worktree add .worktrees/swarm-<task-id> -b swarm/<task-id>
   codex exec -C .worktrees/swarm-<task-id> -m <model> "<prompt>"
   ```
+- **Amp**: It has no native worktree flag. Create/select the worktree yourself, then run `amp review` with Bash `workdir` set to that worktree path.
 - **Other backends without worktree support**: Same as Codex — create worktree, pass working directory
 
 ## Step 3: Dispatch
@@ -173,6 +206,8 @@ If the worker's output contains questions, unresolved blockers, or incomplete wo
    droid exec -s <session-id> "<answer>" > ~/.swarm/tasks/<task-id>/output/<backend>-continued.md 2>&1
    ```
    (Use the session ID from the worker's output — Droid and Codex both print it)
+
+Amp review does not have session continuation. If its output is incomplete, refine the diff description or instructions and dispatch a fresh `amp review` run.
 
 If NO session continuation is needed, proceed to verification.
 

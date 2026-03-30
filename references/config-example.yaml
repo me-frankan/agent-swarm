@@ -12,6 +12,7 @@ default_model: gpt-5.4  # Default model when user doesn't specify
 # Each backend defines:
 #   command  — base CLI command to execute tasks
 #   models   — available models for this backend
+#   task_types — optional list of supported task categories (for example: [review])
 #   flags    — optional flag templates (use {model}, {session_id} as placeholders)
 #
 # To add a custom backend, just add a new entry following this pattern.
@@ -62,11 +63,17 @@ backends:
       model: "--model {model}"
       worktree: "-w"
 
-  # Example: add amp when you have paid credits
-  # amp:
-  #   command: amp --execute
-  #   models: [default]
-  #   flags: {}
+  amp:
+    command: amp review
+    models:
+      - default
+    task_types:
+      - review
+    flags:
+      files: "--files {files}"
+      instructions: "--instructions {instructions}"
+      checks_only: "--checks-only"
+      summary_only: "--summary-only"
 
   # Example: add gemini CLI directly
   # gemini:
